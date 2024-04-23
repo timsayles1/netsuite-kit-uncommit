@@ -173,12 +173,17 @@ function fieldChanged(type,name,line) {
 		urlParams.set('kititem',encodeURIComponent(kitItem));
 		var href = window.location.origin + window.location.pathname + '?';
 		var entries = urlParams.entries();
-		entries.forEach(function(entry) {
-			href += entry[0]+'='+entry[1]+'&';
-			return true;
-		});
-		window.onbeforeunload = null;
-		window.open(href,'_self');	
+		if (entries) {
+			entries.forEach(function(entry) {
+				href += entry[0]+'='+entry[1]+'&';
+				return true;
+			});
+			window.onbeforeunload = null;
+			window.open(href,'_self');
+		}
+		else {
+			alert('Error: Browser incompatible!');
+		}
 	}
 	return true;
 }
