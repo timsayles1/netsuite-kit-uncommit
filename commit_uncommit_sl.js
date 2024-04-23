@@ -4,9 +4,9 @@ function mainApp(request, response) {
 		var sKit = Number(request.getParameter('kititem'))||'';
 		var form = nlapiCreateForm('Inventory Commitments');
 		form.addField('custpage_itemcat','select','Category',null);
-		form.addField('custpage_kititem','select','Kit',null);
-		form.addField('custpage_kititem_param','text','Kit Item',null).setDisplayType('hidden').setDefaultValue(Number(decodeURIComponent(request.getParameter('kititem')))||'');
-		form.addField('custpage_itemcat_param','text','Item Category',null).setDisplayType('hidden').setDefaultValue(decodeURIComponent(request.getParameter('itemcat'))||'Kit');
+		form.addField('custpage_kititem','select','Item',null);
+		form.addField('custpage_kititem_param','text','Item',null).setDisplayType('hidden').setDefaultValue(Number(decodeURIComponent(request.getParameter('kititem')))||'');
+		form.addField('custpage_itemcat_param','text','Category',null).setDisplayType('hidden').setDefaultValue(decodeURIComponent(request.getParameter('itemcat'))||'Kit');
 		form.setScript('customscript_commit_uncommit_cl'); //Set to script ID of client script record.
 		if (sItemCat && sKit) {
 			var itemFilters = [];
