@@ -8,9 +8,36 @@ function mainApp(request, response) {
 		form.addField('custpage_kititem_param','text','Kit Item',null).setDisplayType('hidden').setDefaultValue(Number(decodeURIComponent(request.getParameter('kititem')))||'');
 		form.addField('custpage_itemcat_param','text','Item Category',null).setDisplayType('hidden').setDefaultValue(decodeURIComponent(request.getParameter('itemcat'))||'Kit');
 		form.setScript('customscript_commit_uncommit_cl'); //Set to script ID of client script record.
+		if (sItemCat && sKit) {
+			var itemFilters = [];
+			itemFilters.push(['type','anyof',sItemCat]);
+			itemFilters.push("AND");
+			itemFilters.push(['internalidnumber','equalto',sKit]);
+			var itemSearch = nlapiSearchRecord("item",null,
+			[
+			   itemFilters
+			], 
+			[
+			   new nlobjSearchColumn("itemid"), 
+			   new nlobjSearchColumn("memberitem"), 
+			   new nlobjSearchColumn("displayname","memberItem",null), 
+			   new nlobjSearchColumn("salesdescription","memberItem",null), 
+			   new nlobjSearchColumn("quantityonhand","memberItem",null), 
+			   new nlobjSearchColumn("quantityavailable","memberItem",null)
+			]
+			);
+			form.addTab('custpage_itemtab','Availability');
+			var itemList = form.addSubList('custpage_itemav','list','Availability','custpage_itemtab');
+			itemList.addField('itemid','text','Name');
+			itemList.addField('memberitem','text','Member Item');
+			itemList.addField('displayname_memberitem','text','Member Name');
+			itemList.addField('quantityonhand_memberitem','integer','On Hand');
+			itemList.addField('quantityavailable_memberitem','integer','Available');
+			itemList.setLineItemValues(itemSearch);
+		}
 		form.addTab('custpage_commitp','Committed Orders');
 		form.addTab('custpage_uncommitp','Uncommitted Orders');
-		var list = form.addSubList('custpage_corders','list','Committed Qty','custpage_commitp');
+		var clist = form.addSubList('custpage_corders','list','Committed Qty','custpage_commitp');
 		form.addButton('custpage_reloadbtn','Reset Filters','resetPage()');
 		clist.addField('custpage_update','checkbox','Uncommit');
 		clist.addField('custpage_uncommit','integer','Uncommit Qty').setDisplayType('entry');
@@ -24,7 +51,6 @@ function mainApp(request, response) {
 		clist.addField('quantity_sum','text','Order Quantity');
 		clist.setAmountField('custpage_uncommit');
 		if (sItemCat && sKit) {
-			nlapiLogExecution('DEBUG',sItemCat,sKit);
 			var commitFilters = [];
 			commitFilters.push(['status','anyof','SalesOrd:B']);
 			commitFilters.push("AND");
@@ -55,7 +81,8 @@ function mainApp(request, response) {
 				clist.setLineItemValues(orderSearch);
 			}
 		}
-		var list2 = form.addSubList('custpage_uorders','list','Uncommitted Orders','custpage_uncommitp');
+		var ulist = form.addSubList('custpage_uorders','list','Uncommitted Orders','custpage_uncommitp');
+		ulist.addButton('custpage_commitonly','Commit Only','commitOnly()');
 		ulist.addField('custpage_update','checkbox','Commit');
 		ulist.addField('internalid_group','integer','Record ID').setDisplayType('hidden');
 		ulist.addField('tranid_group','text','Transaction');
@@ -66,7 +93,6 @@ function mainApp(request, response) {
 		ulist.addField('formulanumeric_sum','text','Order Backordered');
 		ulist.addField('quantity_sum','text','Order Quantity');
 		if (sItemCat && sKit) {
-			nlapiLogExecution('DEBUG',sItemCat,sKit);
 			var uncfilters = [];
 			uncfilters.push(['status','anyof','SalesOrd:B']);
 			uncfilters.push("AND");
