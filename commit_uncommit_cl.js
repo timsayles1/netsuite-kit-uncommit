@@ -107,6 +107,46 @@ function pageInit(context) {
 	return true;
 }
 
+function commitOnly() {
+	jQuery.confirm({
+		title: 'Commit Only',
+		content: 'This will only attempt to commit selected orders from available inventory.',
+		boxWidth: '50%',
+		useBootstrap: false,
+		type: 'blue',
+		buttons: {
+			proceed: function() {
+				for (var e = 1; e <= nlapiGetLineItemCount('custpage_uorders'); e++) {
+					if (nlapiGetLineItemValue('custpage_uorders','custpage_update',e) == 'T') {
+						try {
+							var isoid = Number(nlapiGetLineItemValue('custpage_uorders','internalid_group',e));
+							var uso = nlapiLoadRecord('salesorder',isoid);
+							var usoRecId = nlapiSubmitRecord(uso);
+						}
+						catch(e) {alert('Commit error: ' + e.message); break;}
+					}
+				}
+			},
+			cancel: function() {
+			}
+		},
+		onDestroy: function() {
+			jQuery.confirm({
+				title:  nlapiGetFieldText('custpage_kititem'),
+				content: 'Commitment processing complete.<br>',
+				boxWidth: '50%',
+				useBootstrap: false,
+				type: 'blue',
+				buttons: {
+					okay: function () {
+						window.onbeforeunload = null;
+						location.reload();
+					}
+				}
+			});
+		}
+	});
+}
 function resetPage() {
 	var queryString = window.location.search;
 	var urlParams = new URLSearchParams(queryString);
@@ -193,7 +233,6 @@ function reallocate() {
 								var deleteLines = [];
 								var uqty = Number(nlapiGetLineItemValue('custpage_corders','custpage_uncommit',a));
 								var isoid = Number(nlapiGetLineItemValue('custpage_corders','internalid_group',a));
-								console.log('DEBUG','Uncommitting',isoid);
 								var uso = nlapiLoadRecord('salesorder',isoid);
 								for (var b = 1; b < uso.getLineItemCount('item'); b++) {
 									if (Number(uso.getLineItemValue('item','lineuniquekey',b)) == Number(nlapiGetLineItemValue('custpage_corders','lineuniquekey_group',a))) {
@@ -261,7 +300,6 @@ function reallocate() {
 							if (nlapiGetLineItemValue('custpage_uorders','custpage_update',e) == 'T') {
 								try {
 									var isoid = Number(nlapiGetLineItemValue('custpage_uorders','internalid_group',e));
-									console.log('DEBUG','Committing',isoid);
 									var uso = nlapiLoadRecord('salesorder',isoid);
 									var usoRecId = nlapiSubmitRecord(uso);
 								}
@@ -273,7 +311,6 @@ function reallocate() {
 								var uso = nlapiLoadRecord('salesorder',orderLines[f].order);
 								uso.setLineItemValue('item','quantity',orderLines[f].newline,deleteLines[f].tqty);
 								var usoRecId = nlapiSubmitRecord(uso);
-								console.log('DEBUG','Recommitting',usoRecId);
 							}
 							catch(e) {alert('Re-Commit error: ' + e.message); break;}
 						}
